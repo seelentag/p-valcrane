@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Secure Payment</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Valley Crane Theme Colors --- */
+        :root {
+            --vc-blue: #004E7C;       
+            --vc-teal-bg: #B2E4E2;    
+            --vc-teal-border: #8CB6B5;
+            --vc-input-bg: rgba(255, 255, 255, 0.4); 
+            --vc-text: #0a3d62;       
+        }
+
+        body { 
+            font-family: 'Open Sans', sans-serif; 
+            padding: 20px; 
+            color: var(--vc-text); 
+            background-color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .payment-container {
+            background-color: var(--vc-teal-bg);
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+
+        h3 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--vc-text);
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .method-card {
+            border: 1px solid var(--vc-teal-border); 
+            padding: 20px; 
+            margin-bottom: 20px;
+            border-radius: 6px; 
+            cursor: pointer;
+            background-color: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .method-card:hover { 
+            background-color: rgba(255,255,255, 0.1);
+            border-color: var(--vc-blue); 
+        }
+        
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 15px; 
+            box-sizing: border-box; 
+            background-color: var(--vc-input-bg);
+            border: 1px solid var(--vc-teal-border);
+            border-radius: 3px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--vc-blue);
+            background-color: #ffffff;
+        }
+
+        label { 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: var(--vc-text); 
+            display: block; 
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        
+        button {
+            width: 100%; 
+            padding: 15px; 
+            background: var(--vc-blue); 
+            color: white;
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        button:hover { background: #00365a; }
+        button:disabled { background: #999; cursor: not-allowed; }
+
+        #loading-ui { text-align: center; padding: 20px; display: none; }
+        
+        ::placeholder { color: #5a7a8a; opacity: 1; }
+        .cc-row { display: flex; gap: 10px; }
+
+        /* Status Log for Debugging */
+        #status-log {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 4px;
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="payment-container">
+        <div id="payment-interface">
+            <h3>Please Register Payment Information to Place a Job Order</h3>
+            
+            <div class="method-card" id="card-panel" onclick="selectMethod('card')">
+                <label><input type="radio" name="paymentSelector" value="card" checked> Credit Card</label>
+                <div id="card-fields">
+                    <input type="text" id="cardNumber" placeholder="Card Number" maxlength="19">
+                    <div class="cc-row">
+                        <input type="text" id="expMonth" placeholder="MM" maxlength="2">
+                        <input type="text" id="expYear" placeholder="YY" maxlength="2">
+                        <input type="text" id="cardCode" placeholder="CVV" maxlength="4">
+                    </div>
+                </div>
+            </div>
+
+            <div class="method-card" id="bank-panel" onclick="selectMethod('bank')">
+                <label><input type="radio" name="paymentSelector" value="bank"> Bank Account</label>
+                <div id="bank-fields">
+                    <input type="text" id="nameOnAccount" placeholder="Name on Account">
+                    <input type="text" id="accountNumber" placeholder="Account Number">
+                    <input type="text" id="routingNumber" placeholder="Routing Number">
+                    <select id="accountType">
+                        <option value="checking">Checking</option>
+                        <option value="businessChecking">Business Checking</option>
+                        <option value="savings">Savings</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="submitBtn" type="button" onclick="tokenizeData()">Authorize & Place Order</button>
+        </div>
+
+        <div id="loading-ui">
+            <h3>Processing...</h3>
+            <p>Please do not refresh.</p>
+        </div>
+    </div>
+
+    <div id="status-log">Status: Initializing...</div>
+
+    <form id="zohoForm" method="POST" target="_top"
+          action="https://creatorapp.zohopublic.com/valleycranellc/crane-booking-system/form-perma/Helper_Form/C49KhhrfYeYO1HGjt3zPYgB9OvXUg5Xtd7XaFh7awkwO3W2JNTFKJyuUjr9wW8hJ0Rn6yC1VDEEbezvMwJ54nDpHMsw4FKQtF9Us">
+        <input type="hidden" name="Nonce" id="z_nonce">
+        <input type="hidden" name="Booking_ID_Ref" id="z_booking_id">
+    </form>
+
+    <script src="https://jstest.authorize.net/v1/Accept.js" charset="utf-8"></script>
+
+    <script>
+        // --- CONFIGURATION ---
+        var authData = {
+            clientKey: "67nwDm2454TNkyYcbV865j8Vj4XnJYtB97gHad5WrPZ5GfV8gKj9Az4Wnn3An4vN", 
+            apiLoginID: "6c7g447SAu9v"
+        };
+
+        // Logger function
+        function logStatus(msg, isError) {
+            var logBox = document.getElementById("status-log");
+            logBox.style.display = "block";
+            logBox.innerHTML = "<strong>Status:</strong> " + msg;
+            if(isError) logBox.style.color = "red";
+            else logBox.style.color = "#004E7C";
+            console.log(msg);
+        }
+
+        // 1. Helper to select radio buttons
+        function selectMethod(val) {
+            var radio = document.querySelector('input[value="' + val + '"]');
+            if(radio) radio.checked = true;
+        }
+
+        // 2. Main Tokenization Function
+        function tokenizeData() {
+            logStatus("Button Clicked. Starting validation...");
+
+            // Step A: Check Library
+            if (typeof Accept === "undefined") {
+                logStatus("Error: Authorize.Net library failed to load.", true);
+                alert("Payment Error: The security library failed to load. Please try refreshing the page.");
+                return;
+            }
+
+            var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
+            if(!methodSelector) {
+                alert("Please select Credit Card or Bank Account.");
+                return;
+            }
+
+            var method = methodSelector.value;
+            var secureData = { authData: authData };
+
+            // Step B: Gather Data
+            if (method === 'card') {
+                secureData.cardData = {
+                    cardNumber: document.getElementById('cardNumber').value,
+                    month: document.getElementById('expMonth').value,
+                    year: document.getElementById('expYear').value,
+                    cardCode: document.getElementById('cardCode').value
+                };
+            } else {
+                secureData.bankData = {
+                    accountNumber: document.getElementById('accountNumber').value,
+                    routingNumber: document.getElementById('routingNumber').value,
+                    nameOnAccount: document.getElementById('nameOnAccount').value,
+                    accountType: document.getElementById('accountType').value
+                };
+            }
+
+            // Step C: Update UI
+            document.getElementById('payment-interface').style.display = 'none';
+            document.getElementById('loading-ui').style.display = 'block';
+            logStatus("Sending data to Authorize.Net...");
+
+            // Step D: Dispatch
+            try {
+                Accept.dispatchData(secureData, responseHandler);
+            } catch (e) {
+                logStatus("System Crash: " + e.message, true);
+                resetUI();
+            }
+        }
+
+        // 3. Response Handler
+        function responseHandler(response) {
+            if (response.messages.resultCode === "Error") {
+                var errText = response.messages.message[0].text;
+                logStatus("Payment Failed: " + errText, true);
+                alert("Error: " + errText);
+                resetUI();
+            } else {
+                logStatus("Success! Token generated. Redirecting to Zoho...", false);
+                
+                // Fill Hidden Inputs
+                document.getElementById('z_nonce').value = response.opaqueData.dataValue;
+                
+                // Get Booking ID from URL (Note: This works if the iframe has the param)
+                const urlParams = new URLSearchParams(window.location.search);
+                document.getElementById('z_booking_id').value = urlParams.get('bookingId');
+                
+                // Submit
+                document.getElementById('zohoForm').submit();
+            }
+        }
+
+        function resetUI() {
+            document.getElementById('loading-ui').style.display = 'none';
+            document.getElementById('payment-interface').style.display = 'block';
+        }
+
+        // On Load Check
+        document.addEventListener("DOMContentLoaded", function() {
+            if (location.protocol !== 'https:') {
+                logStatus("SECURITY WARNING: Page is not HTTPS. Payment will fail.", true);
+            } else {
+                logStatus("Ready. Secure connection detected.");
+            }
+        });
+    </script>
+</body>
+</html>
