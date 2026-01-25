@@ -13,7 +13,7 @@
             --vc-blue: #004E7C;       
             --vc-teal-bg: #B2E4E2;    
             --vc-teal-border: #8CB6B5;
-            --vc-input-bg: rgba(255, 255, 255, 0.6); /* Slightly more opaque for better readability */
+            --vc-input-bg: rgba(255, 255, 255, 0.6);
             --vc-text: #0a3d62;       
         }
 
@@ -21,7 +21,7 @@
             font-family: 'Open Sans', sans-serif; 
             padding: 20px; 
             color: var(--vc-text); 
-            background-color: #ffffff; /* This white background will be invisible in the iframe */
+            background-color: #ffffff; 
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -30,12 +30,12 @@
         
         .payment-container {
             background-color: var(--vc-teal-bg);
-            padding: 40px; /* Increased padding */
+            padding: 40px; 
             border-radius: 12px;
             width: 100%;
-            max-width: 700px; /* Slightly tighter width for cleaner look */
+            max-width: 700px;
             box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         h3 {
@@ -54,7 +54,7 @@
             margin-bottom: 25px;
             border-radius: 8px; 
             cursor: pointer;
-            background-color: rgba(255,255,255,0.15); /* Subtle highlight */
+            background-color: rgba(255,255,255,0.15);
             transition: all 0.2s ease;
         }
 
@@ -66,7 +66,7 @@
         /* Input styling */
         input, select { 
             width: 100%; 
-            padding: 14px; /* Larger click area */
+            padding: 14px; 
             margin-bottom: 15px; 
             box-sizing: border-box; 
             background-color: var(--vc-input-bg);
@@ -84,14 +84,14 @@
             box-shadow: 0 0 0 3px rgba(0, 78, 124, 0.1);
         }
 
-        /* Label styling (Radio buttons text) */
+        /* Label styling */
         label { 
             font-size: 16px; 
             font-weight: 600; 
             color: var(--vc-text); 
             display: flex; 
             align-items: center;
-            gap: 10px; /* Space between radio circle and text */
+            gap: 10px;
             margin-bottom: 20px;
             cursor: pointer;
         }
@@ -100,7 +100,7 @@
             width: 20px;
             height: 20px;
             margin: 0;
-            accent-color: var(--vc-blue); /* Modern browser support for blue radio */
+            accent-color: var(--vc-blue);
         }
         
         button {
@@ -128,11 +128,9 @@
         
         ::placeholder { color: #6d8a96; opacity: 1; }
         
-        /* Flex fix for the credit card expiry row */
         .cc-row { display: flex; gap: 15px; }
-        .cc-row input { text-align: center; } /* Centers text in small fields */
+        .cc-row input { text-align: center; } 
 
-        /* Status Log for Debugging */
         #status-log {
             margin-top: 20px;
             padding: 10px;
@@ -201,31 +199,30 @@
     <script>
         // --- CONFIGURATION ---
         var authData = {
+            // !!! UPDATE THESE KEYS WITH YOUR LIVE KEYS !!!
             clientKey: "67nwDm2454TNkyYcbV865j8Vj4XnJYtB97gHad5WrPZ5GfV8gKj9Az4Wnn3An4vN", 
             apiLoginID: "6c7g447SAu9v"
         };
 
-        // Logger function
         function logStatus(msg, isError) {
             var logBox = document.getElementById("status-log");
-            logBox.style.display = "block";
-            logBox.innerHTML = "<strong>Status:</strong> " + msg;
-            if(isError) logBox.style.color = "red";
-            else logBox.style.color = "#004E7C";
-            console.log(msg);
+            if(logBox) {
+                logBox.style.display = "block";
+                logBox.innerHTML = "<strong>Status:</strong> " + msg;
+                if(isError) logBox.style.color = "red";
+                else logBox.style.color = "#004E7C";
+                console.log(msg);
+            }
         }
 
-        // 1. Helper to select radio buttons
         function selectMethod(val) {
             var radio = document.querySelector('input[value="' + val + '"]');
             if(radio) radio.checked = true;
         }
 
-        // 2. Main Tokenization Function
         function tokenizeData() {
             logStatus("Button Clicked. Starting validation...");
 
-            // Step A: Check Library
             if (typeof Accept === "undefined") {
                 logStatus("Error: Authorize.Net library failed to load.", true);
                 alert("Payment Error: The security library failed to load. Please try refreshing the page.");
@@ -241,7 +238,6 @@
             var method = methodSelector.value;
             var secureData = { authData: authData };
 
-            // Step B: Gather Data
             if (method === 'card') {
                 secureData.cardData = {
                     cardNumber: document.getElementById('cardNumber').value,
@@ -258,12 +254,10 @@
                 };
             }
 
-            // Step C: Update UI
             document.getElementById('payment-interface').style.display = 'none';
             document.getElementById('loading-ui').style.display = 'block';
             logStatus("Sending data to Authorize.Net...");
 
-            // Step D: Dispatch
             try {
                 Accept.dispatchData(secureData, responseHandler);
             } catch (e) {
@@ -272,7 +266,6 @@
             }
         }
 
-        // 3. Response Handler
         function responseHandler(response) {
             if (response.messages.resultCode === "Error") {
                 var errText = response.messages.message[0].text;
@@ -282,14 +275,11 @@
             } else {
                 logStatus("Success! Token generated. Redirecting to Zoho...", false);
                 
-                // Fill Hidden Inputs
                 document.getElementById('z_nonce').value = response.opaqueData.dataValue;
                 
-                // Get Booking ID from URL (Note: This works if the iframe has the param)
                 const urlParams = new URLSearchParams(window.location.search);
                 document.getElementById('z_booking_id').value = urlParams.get('bookingId');
                 
-                // Submit
                 document.getElementById('zohoForm').submit();
             }
         }
@@ -299,7 +289,6 @@
             document.getElementById('payment-interface').style.display = 'block';
         }
 
-        // On Load Check
         document.addEventListener("DOMContentLoaded", function() {
             if (location.protocol !== 'https:') {
                 logStatus("SECURITY WARNING: Page is not HTTPS. Payment will fail.", true);
