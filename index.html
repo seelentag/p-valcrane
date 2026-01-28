@@ -48,19 +48,44 @@
             text-align: center;
         }
 
+        /* Method Selection Cards */
         .method-card {
             border: 1px solid var(--vc-teal-border); 
-            padding: 25px; 
-            margin-bottom: 25px;
+            padding: 15px 25px; 
+            margin-bottom: 15px;
             border-radius: 8px; 
             cursor: pointer;
             background-color: rgba(255,255,255,0.15);
             transition: all 0.2s ease;
         }
 
-        .method-card:hover, .method-card.active { 
+        .method-card:hover { 
             background-color: rgba(255,255,255, 0.4);
+        }
+
+        .method-card.active {
+            background-color: #ffffff;
             border-color: var(--vc-blue); 
+            box-shadow: 0 2px 8px rgba(0,78,124,0.1);
+        }
+
+        /* Field Containers */
+        .fields-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: none; /* Hidden by default */
+        }
+        
+        /* Show fields when parent card is active */
+        .method-card.active .fields-container {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Input styling */
@@ -92,8 +117,8 @@
             display: flex; 
             align-items: center;
             gap: 10px;
-            margin-bottom: 20px;
             cursor: pointer;
+            margin: 0; /* reset */
         }
 
         input[type="radio"] {
@@ -116,7 +141,7 @@
             font-family: 'Montserrat', sans-serif;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 15px;
+            margin-top: 25px;
             transition: background 0.3s, transform 0.1s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
@@ -149,11 +174,12 @@
 
     <div class="payment-container">
         <div id="payment-interface">
-            <h3>Please Register Payment Information to Place a Job Order</h3>
+            <h3>Register Payment Information</h3>
             
-            <div class="method-card" id="card-panel" onclick="selectMethod('card')">
+            <div class="method-card active" id="card-panel" onclick="selectMethod('card')">
                 <label><input type="radio" name="paymentSelector" value="card" checked> Credit Card</label>
-                <div id="card-fields">
+                
+                <div class="fields-container" id="card-fields">
                     <input type="text" id="cardNumber" placeholder="Card Number" maxlength="19">
                     <div class="cc-row">
                         <input type="text" id="expMonth" placeholder="MM" maxlength="2">
@@ -164,8 +190,9 @@
             </div>
 
             <div class="method-card" id="bank-panel" onclick="selectMethod('bank')">
-                <label><input type="radio" name="paymentSelector" value="bank"> Bank Account</label>
-                <div id="bank-fields">
+                <label><input type="radio" name="paymentSelector" value="bank"> Bank Account (eCheck)</label>
+                
+                <div class="fields-container" id="bank-fields">
                     <input type="text" id="nameOnAccount" placeholder="Name on Account">
                     <input type="text" id="accountNumber" placeholder="Account Number">
                     <input type="text" id="routingNumber" placeholder="Routing Number">
@@ -182,7 +209,8 @@
 
         <div id="loading-ui">
             <h3>Processing...</h3>
-            <p>Please do not refresh.</p>
+            <div style="font-size: 30px; color: var(--vc-blue);">• • •</div>
+            <p>Please do not refresh the page.</p>
         </div>
     </div>
 
@@ -194,30 +222,43 @@
         <input type="hidden" name="Booking_ID_Ref" id="z_booking_id">
     </form>
 
-    <script src="https://jstest.authorize.net/v1/Accept.js" charset="utf-8"></script>
+    <script src="https://js.authorize.net/v1/Accept.js" charset="utf-8"></script>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- LIVE CONFIGURATION (ACTION REQUIRED) ---
         var authData = {
-            // !!! UPDATE THESE KEYS WITH YOUR LIVE KEYS !!!
-            clientKey: "67nwDm2454TNkyYcbV865j8Vj4XnJYtB97gHad5WrPZ5GfV8gKj9Az4Wnn3An4vN", 
+            // REPLACE THESE WITH YOUR LIVE PRODUCTION KEYS
+            clientKey: "5Z7kuuw9W5tta8kER8434F89ExM9CcFC6W6J85HkgWVxfge4h6ZfA6RD55Gn9EZx", 
             apiLoginID: "6c7g447SAu9v"
         };
 
         function logStatus(msg, isError) {
             var logBox = document.getElementById("status-log");
             if(logBox) {
-                logBox.style.display = "block";
-                logBox.innerHTML = "<strong>Status:</strong> " + msg;
-                if(isError) logBox.style.color = "red";
-                else logBox.style.color = "#004E7C";
+                // Only show errors in the UI log to keep it clean, unless debugging
+                if(isError) {
+                    logBox.style.display = "block";
+                    logBox.innerHTML = "<strong>Status:</strong> " + msg;
+                    logBox.style.color = "red";
+                }
                 console.log(msg);
             }
         }
 
         function selectMethod(val) {
+            // Set the radio button
             var radio = document.querySelector('input[value="' + val + '"]');
             if(radio) radio.checked = true;
+
+            // Handle UI Styling for Active State
+            document.getElementById('card-panel').classList.remove('active');
+            document.getElementById('bank-panel').classList.remove('active');
+
+            if(val === 'card') {
+                document.getElementById('card-panel').classList.add('active');
+            } else {
+                document.getElementById('bank-panel').classList.add('active');
+            }
         }
 
         function tokenizeData() {
@@ -225,40 +266,55 @@
 
             if (typeof Accept === "undefined") {
                 logStatus("Error: Authorize.Net library failed to load.", true);
-                alert("Payment Error: The security library failed to load. Please try refreshing the page.");
+                alert("Security Error: Payment library not loaded. Please refresh the page.");
+                return;
+            }
+
+            // Check for Booking ID before processing
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookingId = urlParams.get('bookingId');
+            
+            if(!bookingId) {
+                logStatus("Error: Missing Booking ID in URL", true);
+                alert("System Error: No Booking ID found. Please access this page via the link provided in your email.");
                 return;
             }
 
             var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
-            if(!methodSelector) {
-                alert("Please select Credit Card or Bank Account.");
-                return;
-            }
-
             var method = methodSelector.value;
             var secureData = { authData: authData };
 
+            // Build data object based on method
             if (method === 'card') {
+                var cn = document.getElementById('cardNumber').value.replace(/\s+/g, ''); // Remove spaces
+                if(cn.length < 13) { alert("Please enter a valid card number."); return; }
+                
                 secureData.cardData = {
-                    cardNumber: document.getElementById('cardNumber').value,
+                    cardNumber: cn,
                     month: document.getElementById('expMonth').value,
                     year: document.getElementById('expYear').value,
                     cardCode: document.getElementById('cardCode').value
                 };
             } else {
+                var rout = document.getElementById('routingNumber').value;
+                var acc = document.getElementById('accountNumber').value;
+                if(rout.length < 9 || acc.length < 4) { alert("Please check banking details."); return; }
+
                 secureData.bankData = {
-                    accountNumber: document.getElementById('accountNumber').value,
-                    routingNumber: document.getElementById('routingNumber').value,
+                    accountNumber: acc,
+                    routingNumber: rout,
                     nameOnAccount: document.getElementById('nameOnAccount').value,
                     accountType: document.getElementById('accountType').value
                 };
             }
 
+            // UI Transition
             document.getElementById('payment-interface').style.display = 'none';
             document.getElementById('loading-ui').style.display = 'block';
             logStatus("Sending data to Authorize.Net...");
 
             try {
+                // Dispatch to Authorize.Net
                 Accept.dispatchData(secureData, responseHandler);
             } catch (e) {
                 logStatus("System Crash: " + e.message, true);
@@ -269,17 +325,21 @@
         function responseHandler(response) {
             if (response.messages.resultCode === "Error") {
                 var errText = response.messages.message[0].text;
+                // Check for specific error codes if needed, otherwise general alert
                 logStatus("Payment Failed: " + errText, true);
-                alert("Error: " + errText);
+                alert("Payment Error: " + errText + "\n\nPlease check your details and try again.");
                 resetUI();
             } else {
                 logStatus("Success! Token generated. Redirecting to Zoho...", false);
                 
+                // 1. Set the Nonce
                 document.getElementById('z_nonce').value = response.opaqueData.dataValue;
                 
+                // 2. Set the Booking ID
                 const urlParams = new URLSearchParams(window.location.search);
                 document.getElementById('z_booking_id').value = urlParams.get('bookingId');
                 
+                // 3. Submit to Zoho
                 document.getElementById('zohoForm').submit();
             }
         }
@@ -291,7 +351,8 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             if (location.protocol !== 'https:') {
-                logStatus("SECURITY WARNING: Page is not HTTPS. Payment will fail.", true);
+                logStatus("SECURITY WARNING: Page is not HTTPS.", true);
+                document.querySelector('.payment-container').innerHTML = "<h3 style='color:red'>Security Error</h3><p>This page must be accessed over a secure HTTPS connection.</p>";
             } else {
                 logStatus("Ready. Secure connection detected.");
             }
