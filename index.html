@@ -4,170 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Secure Payment</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-
     <style>
         /* --- Valley Crane Theme Colors --- */
-        :root {
-            --vc-blue: #004E7C;       
-            --vc-teal-bg: #B2E4E2;    
-            --vc-teal-border: #8CB6B5;
-            --vc-input-bg: rgba(255, 255, 255, 0.6);
-            --vc-text: #0a3d62;       
-        }
-
-        body { 
-            font-family: 'Open Sans', sans-serif; 
-            padding: 20px; 
-            color: var(--vc-text); 
-            background-color: #ffffff; 
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .payment-container {
-            background-color: var(--vc-teal-bg);
-            padding: 40px; 
-            border-radius: 12px;
-            width: 100%;
-            max-width: 700px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        h3 {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--vc-text);
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 30px;
-            font-size: 1.25rem;
-            text-align: center;
-        }
-
-        /* Method Selection Cards */
-        .method-card {
-            border: 1px solid var(--vc-teal-border); 
-            padding: 15px 25px; 
-            margin-bottom: 15px;
-            border-radius: 8px; 
-            cursor: pointer;
-            background-color: rgba(255,255,255,0.15);
-            transition: all 0.2s ease;
-        }
-
-        .method-card:hover { 
-            background-color: rgba(255,255,255, 0.4);
-        }
-
-        .method-card.active {
-            background-color: #ffffff;
-            border-color: var(--vc-blue); 
-            box-shadow: 0 2px 8px rgba(0,78,124,0.1);
-        }
-
-        /* Field Containers */
-        .fields-container {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            display: none; /* Hidden by default */
-        }
-        
-        /* Show fields when parent card is active */
-        .method-card.active .fields-container {
-            display: block;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Input styling */
-        input, select { 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 15px; 
-            box-sizing: border-box; 
-            background-color: var(--vc-input-bg);
-            border: 1px solid var(--vc-teal-border);
-            border-radius: 5px;
-            font-size: 15px;
-            color: #333;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--vc-blue);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 3px rgba(0, 78, 124, 0.1);
-        }
-
-        /* Label styling */
-        label { 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: var(--vc-text); 
-            display: flex; 
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            margin: 0; /* reset */
-        }
-
-        input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            margin: 0;
-            accent-color: var(--vc-blue);
-        }
-        
-        button {
-            width: 100%; 
-            padding: 18px; 
-            background: var(--vc-blue); 
-            color: white;
-            border: none; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            font-weight: 800; 
-            cursor: pointer;
-            font-family: 'Montserrat', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 25px;
-            transition: background 0.3s, transform 0.1s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        :root { --vc-blue: #004E7C; --vc-teal-bg: #B2E4E2; --vc-teal-border: #8CB6B5; --vc-input-bg: rgba(255, 255, 255, 0.6); --vc-text: #0a3d62; }
+        body { font-family: 'Open Sans', sans-serif; padding: 20px; color: var(--vc-text); background-color: #ffffff; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .payment-container { background-color: var(--vc-teal-bg); padding: 40px; border-radius: 12px; width: 100%; max-width: 700px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h3 { font-family: 'Montserrat', sans-serif; color: var(--vc-text); font-weight: 700; margin-top: 0; margin-bottom: 30px; font-size: 1.25rem; text-align: center; }
+        .method-card { border: 1px solid var(--vc-teal-border); padding: 15px 25px; margin-bottom: 15px; border-radius: 8px; cursor: pointer; background-color: rgba(255,255,255,0.15); transition: all 0.2s ease; }
+        .method-card:hover { background-color: rgba(255,255,255, 0.4); }
+        .method-card.active { background-color: #ffffff; border-color: var(--vc-blue); box-shadow: 0 2px 8px rgba(0,78,124,0.1); }
+        .fields-container { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: none; }
+        .method-card.active .fields-container { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        input, select { width: 100%; padding: 14px; margin-bottom: 15px; box-sizing: border-box; background-color: var(--vc-input-bg); border: 1px solid var(--vc-teal-border); border-radius: 5px; font-size: 15px; color: #333; transition: border-color 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--vc-blue); background-color: #ffffff; box-shadow: 0 0 0 3px rgba(0, 78, 124, 0.1); }
+        label { font-size: 16px; font-weight: 600; color: var(--vc-text); display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; }
+        input[type="radio"] { width: 20px; height: 20px; margin: 0; accent-color: var(--vc-blue); }
+        button { width: 100%; padding: 18px; background: var(--vc-blue); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: 'Montserrat', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 25px; transition: background 0.3s, transform 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         button:hover { background: #00365a; }
         button:active { transform: translateY(1px); }
-        button:disabled { background: #999; cursor: not-allowed; }
-
         #loading-ui { text-align: center; padding: 40px; display: none; }
-        
         ::placeholder { color: #6d8a96; opacity: 1; }
-        
         .cc-row { display: flex; gap: 15px; }
         .cc-row input { text-align: center; } 
-
-        #status-log {
-            margin-top: 20px;
-            padding: 10px;
-            font-size: 12px;
-            color: #666;
-            background: #f0f0f0;
-            border: 1px solid #ccc;
-            width: 100%;
-            max-width: 700px;
-            border-radius: 4px;
-            display: none; 
-        }
+        #status-log { margin-top: 20px; padding: 10px; font-size: 12px; color: #666; background: #f0f0f0; border: 1px solid #ccc; width: 100%; max-width: 700px; border-radius: 4px; display: none; }
     </style>
 </head>
 <body>
@@ -176,9 +37,8 @@
         <div id="payment-interface">
             <h3>Register Payment Information</h3>
             
-            <div class="method-card active" id="card-panel" onclick="selectMethod('card')">
+            <div class="method-card active" id="btn-select-card">
                 <label><input type="radio" name="paymentSelector" value="card" checked> Credit Card</label>
-                
                 <div class="fields-container" id="card-fields">
                     <input type="text" id="cardNumber" placeholder="Card Number" maxlength="19">
                     <div class="cc-row">
@@ -189,9 +49,8 @@
                 </div>
             </div>
 
-            <div class="method-card" id="bank-panel" onclick="selectMethod('bank')">
+            <div class="method-card" id="btn-select-bank">
                 <label><input type="radio" name="paymentSelector" value="bank"> Bank Account (eCheck)</label>
-                
                 <div class="fields-container" id="bank-fields">
                     <input type="text" id="nameOnAccount" placeholder="Name on Account">
                     <input type="text" id="accountNumber" placeholder="Account Number">
@@ -204,7 +63,7 @@
                 </div>
             </div>
 
-            <button id="submitBtn" type="button" onclick="tokenizeData()">Authorize & Place Order</button>
+            <button id="submitBtn" type="button">Authorize & Place Order</button>
         </div>
 
         <div id="loading-ui">
@@ -225,147 +84,155 @@
     <script src="https://js.authorize.net/v1/Accept.js" charset="utf-8"></script>
 
     <script>
-        // --- LIVE CONFIGURATION (ACTION REQUIRED) ---
-        var authData = {
-            // REPLACE THESE WITH YOUR LIVE PRODUCTION KEYS
-            clientKey: "5Z7kuuw9W5tta8kER8434F89ExM9CcFC6W6J85HkgWVxfge4h6ZfA6RD55Gn9EZx", 
-            apiLoginID: "6c7g447SAu9v"
-        };
-
-        function logStatus(msg, isError) {
-            var logBox = document.getElementById("status-log");
-            if(logBox) {
-                if(isError) {
-                    logBox.style.display = "block";
-                    logBox.innerHTML = "<strong>Status:</strong> " + msg;
-                    logBox.style.color = "red";
-                }
-                console.log(msg);
-            }
-        }
-
-        // Attached to window to prevent ReferenceErrors
-        window.selectMethod = function(val) {
-            var radio = document.querySelector('input[value="' + val + '"]');
-            if(radio) radio.checked = true;
-
-            document.getElementById('card-panel').classList.remove('active');
-            document.getElementById('bank-panel').classList.remove('active');
-
-            if(val === 'card') {
-                document.getElementById('card-panel').classList.add('active');
-            } else {
-                document.getElementById('bank-panel').classList.add('active');
-            }
-        };
-
-        // Attached to window to prevent ReferenceErrors
-        window.tokenizeData = function() {
-            logStatus("Button Clicked. Starting validation...");
-
-            if (typeof Accept === "undefined") {
-                logStatus("Error: Authorize.Net library failed to load.", true);
-                alert("Security Error: Payment library not loaded. Please refresh the page.");
-                return;
-            }
-
-            // --- SMART URL CHECKER (Fixes the "Missing ID" error) ---
-            var queryString = window.location.search;
-
-            // If empty, try to grab them from the parent window (fixes Iframe issues)
-            if (!queryString && window.parent && window.parent !== window) {
-                try {
-                    queryString = window.parent.location.search;
-                    console.log("Found params in parent window: " + queryString);
-                } catch (e) {
-                    console.log("Could not access parent window (Cross-Origin blocked).");
-                }
-            }
-
-            const urlParams = new URLSearchParams(queryString);
-            const bookingId = urlParams.get('bookingId');
-            
-            console.log("Detected Booking ID: " + bookingId);
-
-            if(!bookingId) {
-                logStatus("Error: No Booking ID found in URL.", true);
-                alert("System Error: No Booking ID found.\n\nPlease ensure you accessed this page from the link sent to you.");
-                return;
-            }
-            // -------------------------------------------------------
-
-            var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
-            var method = methodSelector.value;
-            var secureData = { authData: authData };
-
-            if (method === 'card') {
-                var cn = document.getElementById('cardNumber').value.replace(/\s+/g, '');
-                if(cn.length < 13) { alert("Please enter a valid card number."); return; }
-                
-                secureData.cardData = {
-                    cardNumber: cn,
-                    month: document.getElementById('expMonth').value,
-                    year: document.getElementById('expYear').value,
-                    cardCode: document.getElementById('cardCode').value
-                };
-            } else {
-                var rout = document.getElementById('routingNumber').value;
-                var acc = document.getElementById('accountNumber').value;
-                if(rout.length < 9 || acc.length < 4) { alert("Please check banking details."); return; }
-
-                secureData.bankData = {
-                    accountNumber: acc,
-                    routingNumber: rout,
-                    nameOnAccount: document.getElementById('nameOnAccount').value,
-                    accountType: document.getElementById('accountType').value
-                };
-            }
-
-            document.getElementById('payment-interface').style.display = 'none';
-            document.getElementById('loading-ui').style.display = 'block';
-            logStatus("Sending data to Authorize.Net...");
-
-            try {
-                Accept.dispatchData(secureData, responseHandler);
-            } catch (e) {
-                logStatus("System Crash: " + e.message, true);
-                resetUI();
-            }
-        };
-
-        function responseHandler(response) {
-            if (response.messages.resultCode === "Error") {
-                var errText = response.messages.message[0].text;
-                logStatus("Payment Failed: " + errText, true);
-                alert("Payment Error: " + errText + "\n\nPlease check your details and try again.");
-                resetUI();
-            } else {
-                logStatus("Success! Token generated. Redirecting to Zoho...", false);
-                
-                document.getElementById('z_nonce').value = response.opaqueData.dataValue;
-                
-                // Get ID again for the form submission
-                var finalQs = window.location.search;
-                if (!finalQs && window.parent && window.parent !== window) {
-                     try { finalQs = window.parent.location.search; } catch(e){}
-                }
-                const finalParams = new URLSearchParams(finalQs);
-                document.getElementById('z_booking_id').value = finalParams.get('bookingId');
-                
-                document.getElementById('zohoForm').submit();
-            }
-        }
-
-        function resetUI() {
-            document.getElementById('loading-ui').style.display = 'none';
-            document.getElementById('payment-interface').style.display = 'block';
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
+            
+            // --- LIVE CONFIGURATION ---
+            var authData = {
+                clientKey: "5Z7kuuw9W5tta8kER8434F89ExM9CcFC6W6J85HkgWVxfge4h6ZfA6RD55Gn9EZx", 
+                apiLoginID: "6c7g447SAu9v"
+            };
+
+            // --- 1. SETUP EVENT LISTENERS (No inline onclicks!) ---
+            
+            // Card Button Click
+            document.getElementById('btn-select-card').addEventListener('click', function() {
+                toggleMethod('card');
+            });
+
+            // Bank Button Click
+            document.getElementById('btn-select-bank').addEventListener('click', function() {
+                toggleMethod('bank');
+            });
+
+            // Submit Button Click
+            document.getElementById('submitBtn').addEventListener('click', function() {
+                runTokenization();
+            });
+
+            // Log Initial Status
             if (location.protocol !== 'https:') {
                 logStatus("SECURITY WARNING: Page is not HTTPS.", true);
             } else {
                 logStatus("Ready. Secure connection detected.");
+            }
+
+            // --- 2. CORE FUNCTIONS ---
+
+            function toggleMethod(val) {
+                var radio = document.querySelector('input[value="' + val + '"]');
+                if(radio) radio.checked = true;
+
+                document.getElementById('btn-select-card').classList.remove('active');
+                document.getElementById('btn-select-bank').classList.remove('active');
+
+                if(val === 'card') {
+                    document.getElementById('btn-select-card').classList.add('active');
+                } else {
+                    document.getElementById('btn-select-bank').classList.add('active');
+                }
+            }
+
+            function runTokenization() {
+                logStatus("Button Clicked. Starting validation...");
+
+                if (typeof Accept === "undefined") {
+                    logStatus("Error: Authorize.Net library failed to load.", true);
+                    alert("Security Error: Payment library not loaded. Please refresh the page.");
+                    return;
+                }
+
+                // Smart URL Check
+                var queryString = window.location.search;
+                if (!queryString && window.parent && window.parent !== window) {
+                    try { queryString = window.parent.location.search; } catch (e) {}
+                }
+
+                const urlParams = new URLSearchParams(queryString);
+                const bookingId = urlParams.get('bookingId');
+                
+                if(!bookingId) {
+                    logStatus("Error: No Booking ID found.", true);
+                    alert("System Error: No Booking ID found.\n\nPlease ensure you accessed this page from the link sent to you.");
+                    return;
+                }
+
+                var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
+                var method = methodSelector ? methodSelector.value : 'card'; // default fallback
+                var secureData = { authData: authData };
+
+                if (method === 'card') {
+                    var cn = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+                    if(cn.length < 13) { alert("Please enter a valid card number."); return; }
+                    
+                    secureData.cardData = {
+                        cardNumber: cn,
+                        month: document.getElementById('expMonth').value,
+                        year: document.getElementById('expYear').value,
+                        cardCode: document.getElementById('cardCode').value
+                    };
+                } else {
+                    var rout = document.getElementById('routingNumber').value;
+                    var acc = document.getElementById('accountNumber').value;
+                    if(rout.length < 9 || acc.length < 4) { alert("Please check banking details."); return; }
+
+                    secureData.bankData = {
+                        accountNumber: acc,
+                        routingNumber: rout,
+                        nameOnAccount: document.getElementById('nameOnAccount').value,
+                        accountType: document.getElementById('accountType').value
+                    };
+                }
+
+                document.getElementById('payment-interface').style.display = 'none';
+                document.getElementById('loading-ui').style.display = 'block';
+                logStatus("Sending data to Authorize.Net...");
+
+                try {
+                    Accept.dispatchData(secureData, responseHandler);
+                } catch (e) {
+                    logStatus("System Crash: " + e.message, true);
+                    resetUI();
+                }
+            }
+
+            function responseHandler(response) {
+                if (response.messages.resultCode === "Error") {
+                    var errText = response.messages.message[0].text;
+                    logStatus("Payment Failed: " + errText, true);
+                    alert("Payment Error: " + errText);
+                    resetUI();
+                } else {
+                    logStatus("Success! Token generated. Redirecting...", false);
+                    
+                    document.getElementById('z_nonce').value = response.opaqueData.dataValue;
+                    
+                    // Get ID again for submission
+                    var finalQs = window.location.search;
+                    if (!finalQs && window.parent && window.parent !== window) {
+                        try { finalQs = window.parent.location.search; } catch(e){}
+                    }
+                    const finalParams = new URLSearchParams(finalQs);
+                    document.getElementById('z_booking_id').value = finalParams.get('bookingId');
+                    
+                    document.getElementById('zohoForm').submit();
+                }
+            }
+
+            function resetUI() {
+                document.getElementById('loading-ui').style.display = 'none';
+                document.getElementById('payment-interface').style.display = 'block';
+            }
+
+            function logStatus(msg, isError) {
+                var logBox = document.getElementById("status-log");
+                if(logBox) {
+                    if(isError) {
+                        logBox.style.display = "block";
+                        logBox.innerHTML = "<strong>Status:</strong> " + msg;
+                        logBox.style.color = "red";
+                    }
+                    console.log(msg);
+                }
             }
         });
     </script>
