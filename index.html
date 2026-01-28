@@ -235,7 +235,6 @@
         function logStatus(msg, isError) {
             var logBox = document.getElementById("status-log");
             if(logBox) {
-                // Only show errors in the UI log to keep it clean, unless debugging
                 if(isError) {
                     logBox.style.display = "block";
                     logBox.innerHTML = "<strong>Status:</strong> " + msg;
@@ -245,12 +244,11 @@
             }
         }
 
-        function selectMethod(val) {
-            // Set the radio button
+        // Attached to window to prevent ReferenceErrors
+        window.selectMethod = function(val) {
             var radio = document.querySelector('input[value="' + val + '"]');
             if(radio) radio.checked = true;
 
-            // Handle UI Styling for Active State
             document.getElementById('card-panel').classList.remove('active');
             document.getElementById('bank-panel').classList.remove('active');
 
@@ -259,9 +257,10 @@
             } else {
                 document.getElementById('bank-panel').classList.add('active');
             }
-        }
+        };
 
-        function tokenizeData() {
+        // Attached to window to prevent ReferenceErrors
+        window.tokenizeData = function() {
             logStatus("Button Clicked. Starting validation...");
 
             if (typeof Accept === "undefined") {
@@ -270,11 +269,10 @@
                 return;
             }
 
-            // --- FIX: SMART URL CHECKER ---
-            // 1. Try to get parameters from the immediate window
+            // --- SMART URL CHECKER (Fixes the "Missing ID" error) ---
             var queryString = window.location.search;
 
-            // 2. If empty, try to grab them from the parent window (fixes Iframe issues)
+            // If empty, try to grab them from the parent window (fixes Iframe issues)
             if (!queryString && window.parent && window.parent !== window) {
                 try {
                     queryString = window.parent.location.search;
@@ -286,26 +284,22 @@
 
             const urlParams = new URLSearchParams(queryString);
             const bookingId = urlParams.get('bookingId');
-            // ---------------------------------
-
-            // Debugging: Print what we found to the console
+            
             console.log("Detected Booking ID: " + bookingId);
 
             if(!bookingId) {
-                // Enhanced error message to help debug
-                var debugUrl = (window.parent !== window) ? "Parent" : "Current";
-                logStatus("Error: No Booking ID. " + debugUrl + " URL was: " + (queryString || "empty"), true);
+                logStatus("Error: No Booking ID found in URL.", true);
                 alert("System Error: No Booking ID found.\n\nPlease ensure you accessed this page from the link sent to you.");
                 return;
             }
+            // -------------------------------------------------------
 
             var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
             var method = methodSelector.value;
             var secureData = { authData: authData };
 
-            // Build data object based on method
             if (method === 'card') {
-                var cn = document.getElementById('cardNumber').value.replace(/\s+/g, ''); // Remove spaces
+                var cn = document.getElementById('cardNumber').value.replace(/\s+/g, '');
                 if(cn.length < 13) { alert("Please enter a valid card number."); return; }
                 
                 secureData.cardData = {
@@ -327,52 +321,37 @@
                 };
             }
 
-            // UI Transition
             document.getElementById('payment-interface').style.display = 'none';
             document.getElementById('loading-ui').style.display = 'block';
             logStatus("Sending data to Authorize.Net...");
 
             try {
-                // Dispatch to Authorize.Net
                 Accept.dispatchData(secureData, responseHandler);
             } catch (e) {
                 logStatus("System Crash: " + e.message, true);
                 resetUI();
             }
-        }
-
-            // UI Transition
-            document.getElementById('payment-interface').style.display = 'none';
-            document.getElementById('loading-ui').style.display = 'block';
-            logStatus("Sending data to Authorize.Net...");
-
-            try {
-                // Dispatch to Authorize.Net
-                Accept.dispatchData(secureData, responseHandler);
-            } catch (e) {
-                logStatus("System Crash: " + e.message, true);
-                resetUI();
-            }
-        }
+        };
 
         function responseHandler(response) {
             if (response.messages.resultCode === "Error") {
                 var errText = response.messages.message[0].text;
-                // Check for specific error codes if needed, otherwise general alert
                 logStatus("Payment Failed: " + errText, true);
                 alert("Payment Error: " + errText + "\n\nPlease check your details and try again.");
                 resetUI();
             } else {
                 logStatus("Success! Token generated. Redirecting to Zoho...", false);
                 
-                // 1. Set the Nonce
                 document.getElementById('z_nonce').value = response.opaqueData.dataValue;
                 
-                // 2. Set the Booking ID
-                const urlParams = new URLSearchParams(window.location.search);
-                document.getElementById('z_booking_id').value = urlParams.get('bookingId');
+                // Get ID again for the form submission
+                var finalQs = window.location.search;
+                if (!finalQs && window.parent && window.parent !== window) {
+                     try { finalQs = window.parent.location.search; } catch(e){}
+                }
+                const finalParams = new URLSearchParams(finalQs);
+                document.getElementById('z_booking_id').value = finalParams.get('bookingId');
                 
-                // 3. Submit to Zoho
                 document.getElementById('zohoForm').submit();
             }
         }
@@ -385,7 +364,6 @@
         document.addEventListener("DOMContentLoaded", function() {
             if (location.protocol !== 'https:') {
                 logStatus("SECURITY WARNING: Page is not HTTPS.", true);
-                document.querySelector('.payment-container').innerHTML = "<h3 style='color:red'>Security Error</h3><p>This page must be accessed over a secure HTTPS connection.</p>";
             } else {
                 logStatus("Ready. Secure connection detected.");
             }
@@ -393,4 +371,3 @@
     </script>
 </body>
 </html>
-
