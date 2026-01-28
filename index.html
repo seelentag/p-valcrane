@@ -63,7 +63,7 @@
                 </div>
             </div>
 
-            <button id="submitBtn" type="button">Authorize & Place Order</button>
+            <button id="submitBtn" type="button">Authorize & Place Order (v3.0)</button>
         </div>
 
         <div id="loading-ui">
@@ -94,20 +94,13 @@
 
             // --- 1. SETUP EVENT LISTENERS (No inline onclicks!) ---
             
-            // Card Button Click
-            document.getElementById('btn-select-card').addEventListener('click', function() {
-                toggleMethod('card');
-            });
+            var cardBtn = document.getElementById('btn-select-card');
+            var bankBtn = document.getElementById('btn-select-bank');
+            var submitBtn = document.getElementById('submitBtn');
 
-            // Bank Button Click
-            document.getElementById('btn-select-bank').addEventListener('click', function() {
-                toggleMethod('bank');
-            });
-
-            // Submit Button Click
-            document.getElementById('submitBtn').addEventListener('click', function() {
-                runTokenization();
-            });
+            if(cardBtn) cardBtn.addEventListener('click', function() { toggleMethod('card'); });
+            if(bankBtn) bankBtn.addEventListener('click', function() { toggleMethod('bank'); });
+            if(submitBtn) submitBtn.addEventListener('click', function() { runTokenization(); });
 
             // Log Initial Status
             if (location.protocol !== 'https:') {
