@@ -270,13 +270,32 @@
                 return;
             }
 
-            // Check for Booking ID before processing
-            const urlParams = new URLSearchParams(window.location.search);
+            // --- FIX: SMART URL CHECKER ---
+            // 1. Try to get parameters from the immediate window
+            var queryString = window.location.search;
+
+            // 2. If empty, try to grab them from the parent window (fixes Iframe issues)
+            if (!queryString && window.parent && window.parent !== window) {
+                try {
+                    queryString = window.parent.location.search;
+                    console.log("Found params in parent window: " + queryString);
+                } catch (e) {
+                    console.log("Could not access parent window (Cross-Origin blocked).");
+                }
+            }
+
+            const urlParams = new URLSearchParams(queryString);
             const bookingId = urlParams.get('bookingId');
-            
+            // ---------------------------------
+
+            // Debugging: Print what we found to the console
+            console.log("Detected Booking ID: " + bookingId);
+
             if(!bookingId) {
-                logStatus("Error: Missing Booking ID in URL", true);
-                alert("System Error: No Booking ID found. Please access this page via the link provided in your email.");
+                // Enhanced error message to help debug
+                var debugUrl = (window.parent !== window) ? "Parent" : "Current";
+                logStatus("Error: No Booking ID. " + debugUrl + " URL was: " + (queryString || "empty"), true);
+                alert("System Error: No Booking ID found.\n\nPlease ensure you accessed this page from the link sent to you.");
                 return;
             }
 
@@ -307,6 +326,20 @@
                     accountType: document.getElementById('accountType').value
                 };
             }
+
+            // UI Transition
+            document.getElementById('payment-interface').style.display = 'none';
+            document.getElementById('loading-ui').style.display = 'block';
+            logStatus("Sending data to Authorize.Net...");
+
+            try {
+                // Dispatch to Authorize.Net
+                Accept.dispatchData(secureData, responseHandler);
+            } catch (e) {
+                logStatus("System Crash: " + e.message, true);
+                resetUI();
+            }
+        }
 
             // UI Transition
             document.getElementById('payment-interface').style.display = 'none';
@@ -360,3 +393,4 @@
     </script>
 </body>
 </html>
+
