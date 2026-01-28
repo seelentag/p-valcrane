@@ -28,7 +28,22 @@
         ::placeholder { color: #6d8a96; opacity: 1; }
         .cc-row { display: flex; gap: 15px; }
         .cc-row input { text-align: center; } 
-        #status-log { margin-top: 20px; padding: 10px; font-size: 12px; color: #666; background: #f0f0f0; border: 1px solid #ccc; width: 100%; max-width: 700px; border-radius: 4px; display: none; }
+        
+        /* Error Box Styling */
+        #status-log { 
+            margin-top: 20px; 
+            padding: 15px; 
+            font-size: 14px; 
+            color: #d8000c; 
+            background-color: #ffd2d2; 
+            border: 1px solid #d8000c; 
+            width: 100%; 
+            max-width: 700px; 
+            border-radius: 6px; 
+            display: none; 
+            text-align: center;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -63,7 +78,7 @@
                 </div>
             </div>
 
-            <button id="submitBtn" type="button">Authorize & Place Order (v3.0)</button>
+            <button id="submitBtn" type="button">Authorize & Place Order (v4.0)</button>
         </div>
 
         <div id="loading-ui">
@@ -73,7 +88,7 @@
         </div>
     </div>
 
-    <div id="status-log">Status: Initializing...</div>
+    <div id="status-log"></div>
 
     <form id="zohoForm" method="POST" target="_top"
           action="https://creatorapp.zohopublic.com/valleycranellc/crane-booking-system/form-perma/Helper_Form/C49KhhrfYeYO1HGjt3zPYgB9OvXUg5Xtd7XaFh7awkwO3W2JNTFKJyuUjr9wW8hJ0Rn6yC1VDEEbezvMwJ54nDpHMsw4FKQtF9Us">
@@ -92,8 +107,7 @@
                 apiLoginID: "6c7g447SAu9v"
             };
 
-            // --- 1. SETUP EVENT LISTENERS (No inline onclicks!) ---
-            
+            // --- LISTENERS (No inline onclicks) ---
             var cardBtn = document.getElementById('btn-select-card');
             var bankBtn = document.getElementById('btn-select-bank');
             var submitBtn = document.getElementById('submitBtn');
@@ -102,14 +116,15 @@
             if(bankBtn) bankBtn.addEventListener('click', function() { toggleMethod('bank'); });
             if(submitBtn) submitBtn.addEventListener('click', function() { runTokenization(); });
 
-            // Log Initial Status
-            if (location.protocol !== 'https:') {
-                logStatus("SECURITY WARNING: Page is not HTTPS.", true);
-            } else {
-                logStatus("Ready. Secure connection detected.");
+            // --- HELPER: SHOW ERRORS ON PAGE (NO ALERTS) ---
+            function showError(msg) {
+                var logBox = document.getElementById("status-log");
+                if(logBox) {
+                    logBox.style.display = "block";
+                    logBox.innerHTML = "⚠️ " + msg;
+                    console.log("Error displayed: " + msg);
+                }
             }
-
-            // --- 2. CORE FUNCTIONS ---
 
             function toggleMethod(val) {
                 var radio = document.querySelector('input[value="' + val + '"]');
@@ -126,11 +141,11 @@
             }
 
             function runTokenization() {
-                logStatus("Button Clicked. Starting validation...");
-
+                // Clear previous errors
+                document.getElementById("status-log").style.display = "none";
+                
                 if (typeof Accept === "undefined") {
-                    logStatus("Error: Authorize.Net library failed to load.", true);
-                    alert("Security Error: Payment library not loaded. Please refresh the page.");
+                    showError("Security Error: Payment library failed to load. Please refresh.");
                     return;
                 }
 
@@ -144,18 +159,17 @@
                 const bookingId = urlParams.get('bookingId');
                 
                 if(!bookingId) {
-                    logStatus("Error: No Booking ID found.", true);
-                    alert("System Error: No Booking ID found.\n\nPlease ensure you accessed this page from the link sent to you.");
+                    showError("System Error: No Booking ID found. Please use the link sent to your email.");
                     return;
                 }
 
                 var methodSelector = document.querySelector('input[name="paymentSelector"]:checked');
-                var method = methodSelector ? methodSelector.value : 'card'; // default fallback
+                var method = methodSelector ? methodSelector.value : 'card'; 
                 var secureData = { authData: authData };
 
                 if (method === 'card') {
                     var cn = document.getElementById('cardNumber').value.replace(/\s+/g, '');
-                    if(cn.length < 13) { alert("Please enter a valid card number."); return; }
+                    if(cn.length < 13) { showError("Please enter a valid card number."); return; }
                     
                     secureData.cardData = {
                         cardNumber: cn,
@@ -166,7 +180,7 @@
                 } else {
                     var rout = document.getElementById('routingNumber').value;
                     var acc = document.getElementById('accountNumber').value;
-                    if(rout.length < 9 || acc.length < 4) { alert("Please check banking details."); return; }
+                    if(rout.length < 9 || acc.length < 4) { showError("Please check your banking details."); return; }
 
                     secureData.bankData = {
                         accountNumber: acc,
@@ -178,28 +192,29 @@
 
                 document.getElementById('payment-interface').style.display = 'none';
                 document.getElementById('loading-ui').style.display = 'block';
-                logStatus("Sending data to Authorize.Net...");
 
                 try {
                     Accept.dispatchData(secureData, responseHandler);
                 } catch (e) {
-                    logStatus("System Crash: " + e.message, true);
-                    resetUI();
+                    document.getElementById('loading-ui').style.display = 'none';
+                    document.getElementById('payment-interface').style.display = 'block';
+                    showError("System Crash: " + e.message);
                 }
             }
 
             function responseHandler(response) {
                 if (response.messages.resultCode === "Error") {
                     var errText = response.messages.message[0].text;
-                    logStatus("Payment Failed: " + errText, true);
-                    alert("Payment Error: " + errText);
-                    resetUI();
-                } else {
-                    logStatus("Success! Token generated. Redirecting...", false);
                     
+                    // Reset UI
+                    document.getElementById('loading-ui').style.display = 'none';
+                    document.getElementById('payment-interface').style.display = 'block';
+                    
+                    showError("Payment Failed: " + errText);
+                } else {
+                    // Success!
                     document.getElementById('z_nonce').value = response.opaqueData.dataValue;
                     
-                    // Get ID again for submission
                     var finalQs = window.location.search;
                     if (!finalQs && window.parent && window.parent !== window) {
                         try { finalQs = window.parent.location.search; } catch(e){}
@@ -208,23 +223,6 @@
                     document.getElementById('z_booking_id').value = finalParams.get('bookingId');
                     
                     document.getElementById('zohoForm').submit();
-                }
-            }
-
-            function resetUI() {
-                document.getElementById('loading-ui').style.display = 'none';
-                document.getElementById('payment-interface').style.display = 'block';
-            }
-
-            function logStatus(msg, isError) {
-                var logBox = document.getElementById("status-log");
-                if(logBox) {
-                    if(isError) {
-                        logBox.style.display = "block";
-                        logBox.innerHTML = "<strong>Status:</strong> " + msg;
-                        logBox.style.color = "red";
-                    }
-                    console.log(msg);
                 }
             }
         });
